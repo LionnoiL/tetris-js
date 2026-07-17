@@ -1,3 +1,7 @@
+body {
+  font-family: "Montserrat", sans-serif;
+}
+
 .container {
   max-width: 800px;
   margin: 40px auto;
@@ -49,6 +53,64 @@
   width: 200px;
   height: 200px;
   border: 2px solid #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tetromino-wrapper {
+  position: relative;
+}
+
+.tcell {
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  background-color: transparent;
+}
+
+.fcell {
+  background-color: #0a66c2;
+}
+
+.x0 {
+  left: 0;
+}
+
+.x1 {
+  left: 40px;
+}
+
+.x2 {
+  left: 80px;
+}
+
+.x3 {
+  left: 120px;
+}
+
+.x4 {
+  left: 160px;
+}
+
+.y0 {
+  top: 0;
+}
+
+.y1 {
+  top: 40px;
+}
+
+.y2 {
+  top: 80px;
+}
+
+.y3 {
+  top: 120px;
+}
+
+.y4 {
+  top: 160px;
 }
 
 .button-start {
@@ -60,6 +122,7 @@
   color: #ffffff;
   cursor: pointer;
   display: inline-flex;
+  font-family: "Montserrat", sans-serif;
   font-weight: 600;
   justify-content: center;
   line-height: 20px;
