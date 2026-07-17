@@ -8,7 +8,7 @@ function createPlayground() {
     playgroundText += '<div class="row">';
     for (let j = 0; j < 10; j++) {
       playgroundText +=
-        '<svg width="40" height="40"><use href="../images/sprites.svg#icon-grid-unit"></use></svg>';
+        '<svg width="40" height="40"><use href="./images/sprites.svg#icon-grid-unit"></use></svg>';
     }
     playgroundText += "</div>";
   }
