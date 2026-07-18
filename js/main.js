@@ -13,9 +13,9 @@ let gameStatus = GAME_STATUS.stopped;
 let nextFigure = t.getRandomTetromino();
 let currentFigure = null;
 let timePassed = 0;
-let standartSpeed = 600;
+let standartSpeed = 600; //за який час блок зсунеться вниз. чим меньше число, тим більше швидкість
 let maxSpeed = 50;
-let currentSpeed = 600; //за який час блок зсунеться вниз. чим меньше число, тим більше швидкість
+let currentSpeed = standartSpeed;
 const playground = [];
 
 function createPlayground() {
