@@ -47,12 +47,63 @@ export const COLORS = {
 };
 
 export class Tetromino {
+  down() {
+    this.y += 1;
+    this.#setBounds();
+  }
+
+  left() {
+    this.x -= 1;
+    this.#setBounds();
+  }
+
+  right() {
+    this.x += 1;
+    this.#setBounds();
+  }
+
+  #getLastRowIndex() {
+    let lastIndex = -1;
+    for (let i = 0; i < this.data.length; i++) {
+      const row = this.data[i];
+      for (let j = 0; j < row.length; j++) {
+        if (row[j]) {
+          lastIndex = i;
+        }
+      }
+    }
+    return lastIndex;
+  }
+
+  #setBounds() {
+    let minL = 100;
+    let maxL = -1;
+    let maxY = -1;
+
+    for (let i = 0; i < this.data.length; i++) {
+      const row = this.data[i];
+      for (let j = 0; j < row.length; j++) {
+        if (row[j]) {
+          if (j < minL) minL = j;
+          if (j > maxL) maxL = j;
+          maxY = this.data.length - i;
+        }
+      }
+    }
+    this.bounds.lBound = this.x + minL;
+    this.bounds.rBound = this.x + maxL;
+    this.bounds.yBound = this.y - maxY;
+  }
+
   constructor(type) {
     this.type = type;
     this.data = TETROMINOES[type];
     this.color = COLORS[type];
     this.x = Math.round((10 - this.data[0].length) / 2) - 1;
     this.y = -1;
+    this.lastRowIndex = this.#getLastRowIndex();
+    this.lastRow = this.data[this.lastRowIndex];
+    this.bounds = {};
   }
 }
 

@@ -2,7 +2,7 @@ import * as t from "./tetrominoes.js";
 import { GAME_STATUS } from "./utils.js";
 
 const CELL_SIZE = 40;
-const LOOP_TICK = 100;
+const LOOP_TICK = 10;
 
 const playgroundDocument = document.querySelector(".playground");
 const startBtnEl = document.querySelector(".button-start");
@@ -13,7 +13,9 @@ let gameStatus = GAME_STATUS.stopped;
 let nextFigure = t.getRandomTetromino();
 let currentFigure = null;
 let timePassed = 0;
-let currentSpeed = 300; //за який час блок зсунеться вниз. чим меньше число, тим більше швидкість
+let standartSpeed = 600;
+let maxSpeed = 50;
+let currentSpeed = 600; //за який час блок зсунеться вниз. чим меньше число, тим більше швидкість
 const playground = [];
 
 function createPlayground() {
@@ -89,37 +91,83 @@ function newGameStatus(newStatus) {
 }
 
 function currentFigureDown() {
-  const y = currentFigure.y + 1;
-
-  //дійшли до останнього рядка
-  if (y >= playground.length + 2) {
-    return false;
-  }
-
-  const tData = currentFigure.data;
-  const lastRow = tData[tData.length - 1];
-  const newPosition = playground[y];
-
-  let canBeMoved = true;
-
-  //зустріли перешкоду
-  for (let pIdx = 0; pIdx < lastRow.length; pIdx++) {
-    if (lastRow[pIdx] && !newPosition[currentFigure.x + pIdx]) {
-      canBeMoved = false;
-    }
-  }
+  let canBeMoved = canMove(currentFigure, 0, 1);
 
   if (canBeMoved) {
-    //зсув тетроміно на один рядок вниз
-
     clearPosition(currentFigure);
-    currentFigure.y = y;
+    currentFigure.down();
     drawPosition(currentFigure);
 
     renderPlayground();
   }
 
   return canBeMoved;
+}
+
+function currentFigureLeft() {
+  let canBeMoved = canMove(currentFigure, -1, 0);
+
+  if (canBeMoved) {
+    clearPosition(currentFigure);
+    currentFigure.left();
+    drawPosition(currentFigure);
+
+    renderPlayground();
+  }
+
+  return true;
+}
+
+function currentFigureRight() {
+  let canBeMoved = canMove(currentFigure, 1, 0);
+
+  if (canBeMoved) {
+    clearPosition(currentFigure);
+    currentFigure.right();
+    drawPosition(currentFigure);
+
+    renderPlayground();
+  }
+
+  return true;
+}
+
+function canMove(shape, deltaX, deltaY) {
+  const x = currentFigure.x + deltaX;
+  const y = currentFigure.y + deltaY;
+
+  //дійшли до останнього рядка
+  if (currentFigure.bounds.yBound + deltaY >= playground.length) {
+    return false;
+  }
+
+  //лівий край
+  if (currentFigure.bounds.lBound + deltaX < 0) {
+    return false;
+  }
+
+  //правий край
+  if (currentFigure.bounds.rBound + deltaX > playground[0].length - 1) {
+    return false;
+  }
+
+  const tData = currentFigure.data;
+  const lastRow = currentFigure.lastRow;
+  const lastRowIndex = currentFigure.lastRowIndex;
+  let canBeMoved = true;
+
+  return canBeMoved;
+
+  // if (lastRowIndex - 1 >= 0) {
+  //   const newPosition = playground[lastRowIndex - 1];
+
+  //   //зустріли перешкоду
+  //   for (let pIdx = 0; pIdx < lastRow.length; pIdx++) {
+  //     if (lastRow[pIdx] && newPosition[x + pIdx]) {
+  //       canBeMoved = false;
+  //     }
+  //   }
+  // }
 }
 
 function clearPosition(shape) {
@@ -130,7 +178,7 @@ function clearPosition(shape) {
     const x = shape.x;
     const y = shape.y - delta;
     for (let pIdx = 0; pIdx < row.length; pIdx++) {
-      if (y >= 0) {
+      if (y >= 0 && y <= 19) {
         playground[y][x + pIdx] = null;
       }
     }
@@ -162,6 +210,24 @@ const startGame = () => {
   } else {
     newGameStatus(GAME_STATUS.running);
     createPlayground();
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") {
+        currentFigureLeft();
+      }
+      if (event.key === "ArrowRight") {
+        currentFigureRight();
+      }
+      if (event.key === "ArrowDown") {
+        currentSpeed = maxSpeed;
+      }
+    });
+
+    document.addEventListener("keyup", (event) => {
+      if (event.key === "ArrowDown") {
+        currentSpeed = standartSpeed;
+      }
+    });
   }
 
   currentFigure = nextFigure;
@@ -182,6 +248,10 @@ const loop = () => {
     const figureMoved = currentFigureDown();
     checkLines();
     if (figureMoved) {
+      //
+    } else {
+      currentFigure = nextFigure;
+      generateNewTetromino();
     }
   }
 };
