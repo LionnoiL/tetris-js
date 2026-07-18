@@ -92,7 +92,7 @@ function currentFigureDown() {
   const y = currentFigure.y + 1;
 
   //дійшли до останнього рядка
-  if (y >= playground.length) {
+  if (y >= playground.length + 2) {
     return false;
   }
 
