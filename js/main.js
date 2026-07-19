@@ -91,94 +91,106 @@ function newGameStatus(newStatus) {
 }
 
 function currentFigureDown() {
+  clearPosition(currentFigure);
+
   let canBeMoved = canMove(currentFigure, 0, 1);
 
   if (canBeMoved) {
-    clearPosition(currentFigure);
     currentFigure.down();
-    drawPosition(currentFigure);
-
-    renderPlayground();
   }
+
+  drawPosition(currentFigure);
+  renderPlayground();
 
   return canBeMoved;
 }
 
 function currentFigureLeft() {
-  let canBeMoved = canMove(currentFigure, -1, 0);
-
-  if (canBeMoved) {
+  if (gameStatus === GAME_STATUS.running) {
     clearPosition(currentFigure);
-    currentFigure.left();
+
+    let canBeMoved = canMove(currentFigure, -1, 0);
+
+    if (canBeMoved) {
+      currentFigure.left();
+    }
     drawPosition(currentFigure);
-
     renderPlayground();
-  }
 
-  return true;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 function currentFigureRight() {
-  let canBeMoved = canMove(currentFigure, 1, 0);
-
-  if (canBeMoved) {
+  if (gameStatus === GAME_STATUS.running) {
     clearPosition(currentFigure);
-    currentFigure.right();
+
+    let canBeMoved = canMove(currentFigure, 1, 0);
+
+    if (canBeMoved) {
+      currentFigure.right();
+    }
+
     drawPosition(currentFigure);
-
     renderPlayground();
-  }
 
-  return true;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 function canMove(shape, deltaX, deltaY) {
-  const x = currentFigure.x + deltaX;
-  const y = currentFigure.y + deltaY;
+  const x = shape.x + deltaX;
+  const y = shape.y + deltaY;
 
   //дійшли до останнього рядка
-  if (currentFigure.bounds.yBound + deltaY >= playground.length) {
+  if (shape.bounds.yBound + deltaY >= playground.length) {
     return false;
   }
 
   //лівий край
-  if (currentFigure.bounds.lBound + deltaX < 0) {
+  if (shape.bounds.lBound + deltaX < 0) {
     return false;
   }
 
   //правий край
-  if (currentFigure.bounds.rBound + deltaX > playground[0].length - 1) {
+  if (shape.bounds.rBound + deltaX > playground[0].length - 1) {
     return false;
   }
 
-  const tData = currentFigure.data;
-  const lastRow = currentFigure.lastRow;
-  const lastRowIndex = currentFigure.lastRowIndex;
+  const tData = shape.data;
   let canBeMoved = true;
 
+  for (let i = 0; i < tData.length; i++) {
+    const row = tData[i];
+    for (let j = 0; j < row.length; j++) {
+      let cell;
+      try {
+        cell = playground[y + i][x + j];
+      } catch (error) {
+        cell = false;
+      }
+
+      if (row[j] && cell) {
+        canBeMoved = false;
+      }
+    }
+  }
+
   return canBeMoved;
-
-  // if (lastRowIndex - 1 >= 0) {
-  //   const newPosition = playground[lastRowIndex - 1];
-
-  //   //зустріли перешкоду
-  //   for (let pIdx = 0; pIdx < lastRow.length; pIdx++) {
-  //     if (lastRow[pIdx] && newPosition[x + pIdx]) {
-  //       canBeMoved = false;
-  //     }
-  //   }
-  // }
 }
 
 function clearPosition(shape) {
   const tData = shape.data;
   for (let i = 0; i < tData.length; i++) {
     const row = tData[i];
-    const delta = tData.length - i;
+    const y = shape.y + i;
     const x = shape.x;
-    const y = shape.y - delta;
     for (let pIdx = 0; pIdx < row.length; pIdx++) {
-      if (y >= 0 && y <= 19) {
+      if (row[pIdx] && y >= 0 && y <= 19) {
         playground[y][x + pIdx] = null;
       }
     }
@@ -189,12 +201,11 @@ function drawPosition(shape) {
   const tData = shape.data;
   for (let i = 0; i < tData.length; i++) {
     const row = tData[i];
-    const delta = tData.length - i;
+    const y = shape.y + i;
     const x = shape.x;
-    const y = shape.y - delta;
 
     for (let pIdx = 0; pIdx < row.length; pIdx++) {
-      if (row[pIdx] && y >= 0) {
+      if (row[pIdx] && y >= 0 && y <= 19) {
         playground[y][x + pIdx] = currentFigure;
       }
     }
@@ -205,11 +216,18 @@ function checkLines() {}
 
 const startGame = () => {
   if (gameStatus === GAME_STATUS.running) {
+    //ставим на паузу
     newGameStatus(GAME_STATUS.paused);
     return;
-  } else {
+  }
+  if (gameStatus === GAME_STATUS.paused) {
+    //знімаємо з паузи
     newGameStatus(GAME_STATUS.running);
-    createPlayground();
+  } else {
+    //старт гри
+    newGameStatus(GAME_STATUS.running);
+    currentFigure = nextFigure;
+    generateNewTetromino();
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "ArrowLeft") {
@@ -229,9 +247,6 @@ const startGame = () => {
       }
     });
   }
-
-  currentFigure = nextFigure;
-  generateNewTetromino();
 };
 
 const generateNewTetromino = () => {

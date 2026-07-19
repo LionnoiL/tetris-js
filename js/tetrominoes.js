@@ -78,7 +78,7 @@ export class Tetromino {
   #setBounds() {
     let minL = 100;
     let maxL = -1;
-    let maxY = -1;
+    let maxI = -1;
 
     for (let i = 0; i < this.data.length; i++) {
       const row = this.data[i];
@@ -86,13 +86,13 @@ export class Tetromino {
         if (row[j]) {
           if (j < minL) minL = j;
           if (j > maxL) maxL = j;
-          maxY = this.data.length - i;
+          if (i > maxI) maxI = i;
         }
       }
     }
     this.bounds.lBound = this.x + minL;
     this.bounds.rBound = this.x + maxL;
-    this.bounds.yBound = this.y - maxY;
+    this.bounds.yBound = this.y + maxI;
   }
 
   constructor(type) {
