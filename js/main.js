@@ -142,6 +142,19 @@ function currentFigureRight() {
   }
 }
 
+function currentFigureRotate() {
+  if (gameStatus === GAME_STATUS.running) {
+    clearPosition(currentFigure);
+    currentFigure.rotate();
+    drawPosition(currentFigure);
+    renderPlayground();
+
+    return true;
+  } else {
+    return false;
+  }
+}
+
 function canMove(shape, deltaX, deltaY) {
   const x = shape.x + deltaX;
   const y = shape.y + deltaY;
@@ -238,6 +251,9 @@ const startGame = () => {
       }
       if (event.key === "ArrowDown") {
         currentSpeed = maxSpeed;
+      }
+      if (event.key === "ArrowUp") {
+        currentFigureRotate();
       }
     });
 

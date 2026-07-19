@@ -62,6 +62,33 @@ export class Tetromino {
     this.#setBounds();
   }
 
+  rotate() {
+    if (this.type === "O") {
+      return;
+    }
+
+    const tetrominoSize = this.data.length;
+    const transport = structuredClone(this.data);
+    for (let i = 0; i < tetrominoSize; i++) {
+      for (let j = 0; j < tetrominoSize; j++) {
+        transport[i][j] = 0;
+      }
+    }
+
+    for (let i = 0; i < tetrominoSize; i++) {
+      for (let j = 0; j < tetrominoSize; j++) {
+        transport[i][j] = this.data[j][i];
+      }
+    }
+
+    for (let i = 0; i < tetrominoSize; i++) {
+      const row = transport[i];
+      row.reverse();
+    }
+
+    this.data = transport;
+  }
+
   #getLastRowIndex() {
     let lastIndex = -1;
     for (let i = 0; i < this.data.length; i++) {
