@@ -1,12 +1,15 @@
 import * as t from "./tetrominoes.js";
-import { GAME_STATUS } from "./utils.js";
+import { GAME_STATUS, fillArray } from "./utils.js";
 
 const CELL_SIZE = 40;
 const LOOP_TICK = 10;
+const SCORE_ONE_LINE = 100;
+const SCORE_COMBO_RATIO = 2;
 
 const playgroundDocument = document.querySelector(".playground");
 const startBtnEl = document.querySelector(".button-start");
 const nextPieceEl = document.querySelector(".next-piece");
+const scoreEl = document.querySelector(".score-value");
 
 let mainLoopTimer;
 let gameStatus = GAME_STATUS.stopped;
@@ -16,6 +19,7 @@ let timePassed = 0;
 let standartSpeed = 600; //за який час блок зсунеться вниз. чим меньше число, тим більше швидкість
 let maxSpeed = 50;
 let currentSpeed = standartSpeed;
+let score = 0;
 const playground = [];
 
 function createPlayground() {
@@ -225,7 +229,40 @@ function drawPosition(shape) {
   }
 }
 
-function checkLines() {}
+function checkLines() {
+  const filledRows = [];
+  for (let i = 0; i < playground.length; i++) {
+    let notCompleteRow = false;
+    for (let j = 0; j < playground[i].length; j++) {
+      if (!playground[i][j]) {
+        notCompleteRow = true;
+        break;
+      }
+    }
+    if (!notCompleteRow) {
+      filledRows.push(i);
+    }
+  }
+
+  clearLines(filledRows);
+  changeScore(filledRows.length);
+}
+
+function clearLines(filledRows) {
+  for (const i of filledRows) {
+    for (let ip = i; ip > 0; ip--) {
+      playground[ip] = playground[ip - 1].slice();
+    }
+    fillArray(playground[0], 0);
+  }
+}
+
+function changeScore(linesCount) {
+  if (linesCount > 0) {
+    score += linesCount * SCORE_ONE_LINE;
+    scoreEl.textContent = score;
+  }
+}
 
 const startGame = () => {
   if (gameStatus === GAME_STATUS.running) {
