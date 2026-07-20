@@ -1,5 +1,5 @@
 import * as t from "./tetrominoes.js";
-import { GAME_STATUS, fillArray } from "./utils.js";
+import { GAME_STATUS, SPEED_LIMITS, fillArray, pause } from "./utils.js";
 
 const CELL_SIZE = 40;
 const LOOP_TICK = 10;
@@ -10,6 +10,7 @@ const playgroundDocument = document.querySelector(".playground");
 const startBtnEl = document.querySelector(".button-start");
 const nextPieceEl = document.querySelector(".next-piece");
 const scoreEl = document.querySelector(".score-value");
+const levelEl = document.querySelector(".level-value");
 
 let mainLoopTimer;
 let gameStatus = GAME_STATUS.stopped;
@@ -21,6 +22,7 @@ let maxSpeed = 50;
 let currentSpeed = standartSpeed;
 let score = 0;
 const playground = [];
+let enableLoop = true;
 
 function createPlayground() {
   let playgroundText = "";
@@ -248,20 +250,54 @@ function checkLines() {
   changeScore(filledRows.length);
 }
 
-function clearLines(filledRows) {
-  for (const i of filledRows) {
-    for (let ip = i; ip > 0; ip--) {
-      playground[ip] = playground[ip - 1].slice();
+async function clearLines(filledRows) {
+  if (filledRows.length > 0) {
+    enableLoop = false;
+    highlightLines(filledRows);
+    await pause(500);
+    filledRows.sort((a, b) => a - b);
+    for (const i of filledRows) {
+      for (let ip = i; ip > 0; ip--) {
+        playground[ip] = playground[ip - 1].slice();
+      }
+      fillArray(playground[0], 0);
     }
-    fillArray(playground[0], 0);
+    enableLoop = true;
+  }
+}
+
+function highlightLines(filledRows) {
+  for (const i of filledRows) {
+    for (let j = 0; j < 10; j++) {
+      const selector = `#cell_${i}_${j}`;
+      const cellEl = document.querySelector(selector);
+      cellEl.style.setProperty("--color1", "#928c8c");
+    }
   }
 }
 
 function changeScore(linesCount) {
   if (linesCount > 0) {
-    score += linesCount * SCORE_ONE_LINE;
+    const ratio = linesCount > 1 ? SCORE_COMBO_RATIO : 1;
+    score += linesCount * SCORE_ONE_LINE * ratio;
     scoreEl.textContent = score;
+    changeSpeed();
   }
+}
+
+function changeSpeed() {
+  currentSpeed = standartSpeed;
+  let speed = currentSpeed;
+  let level = 1;
+  for (let i = 0; i < SPEED_LIMITS.length; i++) {
+    if (score >= SPEED_LIMITS[i][0]) {
+      speed = SPEED_LIMITS[i][1];
+      level++;
+    }
+  }
+  currentSpeed = speed;
+  standartSpeed = currentSpeed;
+  levelEl.textContent = level;
 }
 
 const startGame = () => {
@@ -309,17 +345,20 @@ const generateNewTetromino = () => {
 };
 
 const loop = () => {
-  timePassed += LOOP_TICK;
+  if (enableLoop) {
+    timePassed += LOOP_TICK;
 
-  if (timePassed >= currentSpeed) {
-    timePassed = 0;
-    const figureMoved = currentFigureDown();
-    checkLines();
-    if (figureMoved) {
-      //
-    } else {
-      currentFigure = nextFigure;
-      generateNewTetromino();
+    if (timePassed >= currentSpeed) {
+      timePassed = 0;
+      const figureMoved = currentFigureDown();
+
+      if (figureMoved) {
+        //
+      } else {
+        checkLines();
+        currentFigure = nextFigure;
+        generateNewTetromino();
+      }
     }
   }
 };
