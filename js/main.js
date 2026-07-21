@@ -1,5 +1,6 @@
 import * as t from "./tetrominoes.js";
-import { GAME_STATUS, SPEED_LIMITS, fillArray, pause } from "./utils.js";
+import { GAME_STATUS, SPEED_LIMITS, SOUNDS } from "./config.js";
+import { fillArray, pause, playSound } from "./utils.js";
 
 const CELL_SIZE = 40;
 const LOOP_TICK = 10;
@@ -316,7 +317,7 @@ function changeSpeed() {
   levelEl.textContent = level;
 }
 
-const eventKeyDown = (event) => {
+function eventKeyDown(event) {
   if (event.key === "ArrowLeft") {
     currentFigureLeft();
   }
@@ -329,15 +330,15 @@ const eventKeyDown = (event) => {
   if (event.key === "ArrowUp") {
     currentFigureRotate();
   }
-};
+}
 
-const eventKeyUp = (event) => {
+function eventKeyUp(event) {
   if (event.key === "ArrowDown") {
     currentSpeed = standartSpeed;
   }
-};
+}
 
-const startGame = () => {
+function startGame() {
   if (gameStatus === GAME_STATUS.running) {
     //ставим на паузу
     newGameStatus(GAME_STATUS.paused);
@@ -355,28 +356,28 @@ const startGame = () => {
     document.addEventListener("keydown", eventKeyDown);
     document.addEventListener("keyup", eventKeyUp);
   }
-};
+}
 
-const endGame = () => {
+function endGame() {
   clearInterval(mainLoopTimer);
 
   document.removeEventListener("keydown", eventKeyDown);
   document.removeEventListener("keyup", eventKeyUp);
 
   openMessage(getEndGameMessage(score));
-};
+}
 
-const finishGame = () => {
+function finishGame() {
   newGameStatus(GAME_STATUS.stopped);
-};
+}
 
-const generateNewTetromino = () => {
+function generateNewTetromino() {
   nextFigure = t.getRandomTetromino();
   renderTetromino(nextFigure);
   placeNext(nextFigure);
-};
+}
 
-const loop = () => {
+function loop() {
   if (enableLoop) {
     timePassed += LOOP_TICK;
 
@@ -387,6 +388,7 @@ const loop = () => {
       if (figureMoved) {
         //
       } else {
+        playSound(SOUNDS.drop);
         checkLines();
         if (currentFigure.y === -1) {
           endGame();
@@ -396,17 +398,17 @@ const loop = () => {
       }
     }
   }
-};
+}
 
-const openMessage = (message) => {
+function openMessage(message) {
   messageTextBtnEl.textContent = message;
   messageWrapperBtnEl.classList.add("active");
-};
+}
 
-const closeMessage = () => {
+function closeMessage() {
   messageWrapperBtnEl.classList.remove("active");
   finishGame();
-};
+}
 
 startBtnEl.addEventListener("click", startGame);
 closeMessageBtnEl.addEventListener("click", closeMessage);
