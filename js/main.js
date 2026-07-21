@@ -6,11 +6,18 @@ const LOOP_TICK = 10;
 const SCORE_ONE_LINE = 100;
 const SCORE_COMBO_RATIO = 2;
 
+const getEndGameMessage = (score) =>
+  `Great job! You scored ${score} points. Want to try again and beat your high score?`;
+
 const playgroundDocument = document.querySelector(".playground");
-const startBtnEl = document.querySelector(".button-start");
+const startBtnEl = document.querySelector(".start-btn");
 const nextPieceEl = document.querySelector(".next-piece");
 const scoreEl = document.querySelector(".score-value");
 const levelEl = document.querySelector(".level-value");
+
+const messageWrapperBtnEl = document.querySelector(".message-wrapper");
+const messageTextBtnEl = document.querySelector(".messge-text");
+const closeMessageBtnEl = document.querySelector(".close-btn");
 
 let mainLoopTimer;
 let gameStatus = GAME_STATUS.stopped;
@@ -87,13 +94,22 @@ function placeNext(tetromino) {
 
 function newGameStatus(newStatus) {
   gameStatus = newStatus;
+  let startBtnText = "Play";
   if (gameStatus === GAME_STATUS.running) {
-    startBtnEl.textContent = "Pause";
+    startBtnText = "Pause";
     mainLoopTimer = window.setInterval(loop, LOOP_TICK);
+  } else if (gameStatus === GAME_STATUS.stopped) {
+    fillArray(playground, null);
+    score = 0;
+    scoreEl.textContent = score;
+    changeSpeed();
+    currentSpeed = standartSpeed;
+    renderPlayground();
   } else {
-    startBtnEl.textContent = "Play";
     clearInterval(mainLoopTimer);
   }
+
+  startBtnEl.textContent = startBtnText;
 }
 
 function currentFigureDown() {
@@ -254,7 +270,7 @@ async function clearLines(filledRows) {
   if (filledRows.length > 0) {
     enableLoop = false;
     highlightLines(filledRows);
-    await pause(500);
+    await pause(200);
     filledRows.sort((a, b) => a - b);
     for (const i of filledRows) {
       for (let ip = i; ip > 0; ip--) {
@@ -300,6 +316,27 @@ function changeSpeed() {
   levelEl.textContent = level;
 }
 
+const eventKeyDown = (event) => {
+  if (event.key === "ArrowLeft") {
+    currentFigureLeft();
+  }
+  if (event.key === "ArrowRight") {
+    currentFigureRight();
+  }
+  if (event.key === "ArrowDown") {
+    currentSpeed = maxSpeed;
+  }
+  if (event.key === "ArrowUp") {
+    currentFigureRotate();
+  }
+};
+
+const eventKeyUp = (event) => {
+  if (event.key === "ArrowDown") {
+    currentSpeed = standartSpeed;
+  }
+};
+
 const startGame = () => {
   if (gameStatus === GAME_STATUS.running) {
     //ставим на паузу
@@ -315,27 +352,22 @@ const startGame = () => {
     currentFigure = nextFigure;
     generateNewTetromino();
 
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "ArrowLeft") {
-        currentFigureLeft();
-      }
-      if (event.key === "ArrowRight") {
-        currentFigureRight();
-      }
-      if (event.key === "ArrowDown") {
-        currentSpeed = maxSpeed;
-      }
-      if (event.key === "ArrowUp") {
-        currentFigureRotate();
-      }
-    });
-
-    document.addEventListener("keyup", (event) => {
-      if (event.key === "ArrowDown") {
-        currentSpeed = standartSpeed;
-      }
-    });
+    document.addEventListener("keydown", eventKeyDown);
+    document.addEventListener("keyup", eventKeyUp);
   }
+};
+
+const endGame = () => {
+  clearInterval(mainLoopTimer);
+
+  document.removeEventListener("keydown", eventKeyDown);
+  document.removeEventListener("keyup", eventKeyUp);
+
+  openMessage(getEndGameMessage(score));
+};
+
+const finishGame = () => {
+  newGameStatus(GAME_STATUS.stopped);
 };
 
 const generateNewTetromino = () => {
@@ -356,6 +388,9 @@ const loop = () => {
         //
       } else {
         checkLines();
+        if (currentFigure.y === -1) {
+          endGame();
+        }
         currentFigure = nextFigure;
         generateNewTetromino();
       }
@@ -363,7 +398,18 @@ const loop = () => {
   }
 };
 
+const openMessage = (message) => {
+  messageTextBtnEl.textContent = message;
+  messageWrapperBtnEl.classList.add("active");
+};
+
+const closeMessage = () => {
+  messageWrapperBtnEl.classList.remove("active");
+  finishGame();
+};
+
 startBtnEl.addEventListener("click", startGame);
+closeMessageBtnEl.addEventListener("click", closeMessage);
 nextPieceEl.addEventListener("click", generateNewTetromino);
 
 clearInterval(mainLoopTimer);
