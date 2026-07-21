@@ -14,5 +14,5 @@ export const SPEED_LIMITS = [
 ];
 
 export const SOUNDS = {
-  drop: new Audio("../sounds/drop.wav"),
+  drop: new Audio("./sounds/drop.wav"),
 };
