@@ -2,6 +2,10 @@ import * as t from "./tetrominoes.js";
 import { GAME_STATUS, SPEED_LIMITS, SOUNDS } from "./config.js";
 import { fillArray, pause, playSound } from "./utils.js";
 
+const EMPTY_CELL_COLOR = "#e8f5f9";
+const HIGHLIGHT_COLOR = "#928c8c";
+const PLAYGROUND_WIDTH = 10;
+const PLAYGROUND_HEIGHT = 20;
 const CELL_SIZE = 40;
 const LOOP_TICK = 10;
 const SCORE_ONE_LINE = 100;
@@ -33,8 +37,8 @@ const playground = [];
 let enableLoop = true;
 
 function createPlayground() {
-  for (let i = 0; i < 20; i++) {
-    playground[i] = new Array(10).fill(null);
+  for (let i = 0; i < PLAYGROUND_HEIGHT; i++) {
+    playground[i] = new Array(PLAYGROUND_WIDTH).fill(null);
   }
 
   playgroundDocument.innerHTML = playground
@@ -75,7 +79,7 @@ function renderPlayground() {
       if (row[j]) {
         cellEl.style.setProperty("--color1", row[j].color);
       } else {
-        cellEl.style.setProperty("--color1", "#e8f5f9");
+        cellEl.style.setProperty("--color1", EMPTY_CELL_COLOR);
       }
     }
   }
@@ -113,13 +117,36 @@ function newGameStatus(newStatus) {
   startBtnEl.textContent = startBtnText;
 }
 
-function currentFigureDown() {
+function cloneTetrominoData(data) {
+  return data.map((row) => [...row]);
+}
+
+function moveCurrentFigure(action, dx = 0, dy = 0) {
+  if (gameStatus !== GAME_STATUS.running) {
+    return false;
+  }
+
+  const isRotate = action === "rotate";
+
+  if (isRotate) {
+    clearPosition(currentFigure);
+    const canBeMoved = t.tryRotateTetromino(
+      currentFigure,
+      (shape, shapeDx, shapeDy) => canMove(shape, shapeDx, shapeDy),
+    );
+
+    drawPosition(currentFigure);
+    renderPlayground();
+
+    return canBeMoved;
+  }
+
   clearPosition(currentFigure);
 
-  let canBeMoved = canMove(currentFigure, 0, 1);
+  const canBeMoved = canMove(currentFigure, dx, dy);
 
   if (canBeMoved) {
-    currentFigure.down();
+    currentFigure[action]();
   }
 
   drawPosition(currentFigure);
@@ -128,54 +155,20 @@ function currentFigureDown() {
   return canBeMoved;
 }
 
+function currentFigureDown() {
+  return moveCurrentFigure("down", 0, 1);
+}
+
 function currentFigureLeft() {
-  if (gameStatus === GAME_STATUS.running) {
-    clearPosition(currentFigure);
-
-    let canBeMoved = canMove(currentFigure, -1, 0);
-
-    if (canBeMoved) {
-      currentFigure.left();
-    }
-    drawPosition(currentFigure);
-    renderPlayground();
-
-    return true;
-  } else {
-    return false;
-  }
+  return moveCurrentFigure("left", -1, 0);
 }
 
 function currentFigureRight() {
-  if (gameStatus === GAME_STATUS.running) {
-    clearPosition(currentFigure);
-
-    let canBeMoved = canMove(currentFigure, 1, 0);
-
-    if (canBeMoved) {
-      currentFigure.right();
-    }
-
-    drawPosition(currentFigure);
-    renderPlayground();
-
-    return true;
-  } else {
-    return false;
-  }
+  return moveCurrentFigure("right", 1, 0);
 }
 
 function currentFigureRotate() {
-  if (gameStatus === GAME_STATUS.running) {
-    clearPosition(currentFigure);
-    currentFigure.rotate();
-    drawPosition(currentFigure);
-    renderPlayground();
-
-    return true;
-  } else {
-    return false;
-  }
+  return moveCurrentFigure("rotate");
 }
 
 function canMove(shape, deltaX, deltaY) {
@@ -285,10 +278,10 @@ async function clearLines(filledRows) {
 
 function highlightLines(filledRows) {
   for (const i of filledRows) {
-    for (let j = 0; j < 10; j++) {
+    for (let j = 0; j < PLAYGROUND_WIDTH; j++) {
       const selector = `#cell_${i}_${j}`;
       const cellEl = document.querySelector(selector);
-      cellEl.style.setProperty("--color1", "#928c8c");
+      cellEl.style.setProperty("--color1", HIGHLIGHT_COLOR);
     }
   }
 }
@@ -340,15 +333,12 @@ function eventKeyUp(event) {
 
 function startGame() {
   if (gameStatus === GAME_STATUS.running) {
-    //ставим на паузу
     newGameStatus(GAME_STATUS.paused);
     return;
   }
   if (gameStatus === GAME_STATUS.paused) {
-    //знімаємо з паузи
     newGameStatus(GAME_STATUS.running);
   } else {
-    //старт гри
     newGameStatus(GAME_STATUS.running);
     currentFigure = nextFigure;
     generateNewTetromino();

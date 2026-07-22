@@ -46,6 +46,34 @@ export const COLORS = {
   L: "#EF7921",
 };
 
+export function tryRotateTetromino(shape, canMoveFn) {
+  if (shape.type === "O") {
+    return true;
+  }
+
+  const originalData = shape.data.map((row) => [...row]);
+  const originalX = shape.x;
+  const originalY = shape.y;
+  const offsets = [0, -1, 1, -2, 2];
+
+  for (const offset of offsets) {
+    shape.data = originalData.map((row) => [...row]);
+    shape.x = originalX + offset;
+    shape.y = originalY;
+    shape.rotate();
+
+    if (canMoveFn(shape, 0, 0)) {
+      return true;
+    }
+  }
+
+  shape.data = originalData;
+  shape.x = originalX;
+  shape.y = originalY;
+  shape.updateBounds();
+  return false;
+}
+
 export class Tetromino {
   down() {
     this.y += 1;
@@ -71,6 +99,11 @@ export class Tetromino {
     this.data = this.data.map((row, i) =>
       row.map((element, j) => this.data[size - 1 - j][i]),
     );
+    this.updateBounds();
+  }
+
+  updateBounds() {
+    this.#setBounds();
   }
 
   #getLastRowIndex() {
