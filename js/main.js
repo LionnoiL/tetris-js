@@ -33,36 +33,36 @@ const playground = [];
 let enableLoop = true;
 
 function createPlayground() {
-  let playgroundText = "";
-
   for (let i = 0; i < 20; i++) {
-    playgroundText += `<div class="row">`;
-    playground[i] = [];
-    for (let j = 0; j < 10; j++) {
-      const id = `cell_${i}_${j}`;
-      playgroundText += `<svg id="${id}" width="${CELL_SIZE}" height="${CELL_SIZE}"><use href="./images/sprites.svg#icon-grid-unit"></use></svg>`;
-      playground[i][j] = null;
-    }
-    playgroundText += `</div>`;
+    playground[i] = new Array(10).fill(null);
   }
 
-  playgroundDocument.innerHTML = playgroundText;
+  playgroundDocument.innerHTML = playground
+    .map(
+      (row, i) =>
+        `<div class="row">${row
+          .map(
+            (element, j) =>
+              `<svg id="cell_${i}_${j}" width="${CELL_SIZE}" height="${CELL_SIZE}"><use href="./images/sprites.svg#icon-grid-unit"></use></svg>`,
+          )
+          .join("")}</div>`,
+    )
+    .join("");
 }
 
 function renderTetromino(tetromino) {
-  let res = "";
-  const data = tetromino.data;
-  for (let i = 0; i < data.length; i++) {
-    const row = data[i];
+  const { data } = tetromino;
 
-    for (let j = 0; j < row.length; j++) {
-      const cellValue = row[j];
-      const fillCell = cellValue != 1 ? "" : "fcell";
-      res += `<div class="tcell x${j} y${i} ${fillCell}"></div>`;
-    }
-  }
-
-  tetromino.html = res;
+  tetromino.html = data
+    .map((row, i) =>
+      row
+        .map((cellValue, j) => {
+          const fillCell = cellValue != 1 ? "" : "fcell";
+          return `<div class="tcell x${j} y${i} ${fillCell}"></div>`;
+        })
+        .join(""),
+    )
+    .join("");
 }
 
 function renderPlayground() {
