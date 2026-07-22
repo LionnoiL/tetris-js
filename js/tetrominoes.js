@@ -67,53 +67,33 @@ export class Tetromino {
       return;
     }
 
-    const tetrominoSize = this.data.length;
-    const transport = structuredClone(this.data);
-    for (let i = 0; i < tetrominoSize; i++) {
-      for (let j = 0; j < tetrominoSize; j++) {
-        transport[i][j] = 0;
-      }
-    }
-
-    for (let i = 0; i < tetrominoSize; i++) {
-      for (let j = 0; j < tetrominoSize; j++) {
-        transport[i][j] = this.data[j][i];
-      }
-    }
-
-    for (let i = 0; i < tetrominoSize; i++) {
-      const row = transport[i];
-      row.reverse();
-    }
-
-    this.data = transport;
+    const size = this.data.length;
+    this.data = this.data.map((row, i) =>
+      row.map((element, j) => this.data[size - 1 - j][i]),
+    );
   }
 
   #getLastRowIndex() {
-    let lastIndex = -1;
-    for (let i = 0; i < this.data.length; i++) {
-      const row = this.data[i];
-      for (let j = 0; j < row.length; j++) {
-        if (row[j]) {
-          lastIndex = i;
-        }
+    for (let i = this.data.length - 1; i >= 0; i--) {
+      if (this.data[i].some(Boolean)) {
+        return i;
       }
     }
-    return lastIndex;
+    return -1;
   }
 
   #setBounds() {
-    let minL = 100;
-    let maxL = -1;
+    let minL = Infinity;
+    let maxL = -Infinity;
     let maxI = -1;
 
     for (let i = 0; i < this.data.length; i++) {
       const row = this.data[i];
       for (let j = 0; j < row.length; j++) {
         if (row[j]) {
-          if (j < minL) minL = j;
-          if (j > maxL) maxL = j;
-          if (i > maxI) maxI = i;
+          minL = Math.min(minL, j);
+          maxL = Math.max(maxL, j);
+          maxI = i;
         }
       }
     }
